@@ -1,10 +1,6 @@
 (* ::Package:: *)
 
 BeginPackage["MERLIN`"];
-
-(* Declare exported functions *)
-COMMANDS::usage = "COMMANDS describe the functions of VacDiff";
-COMMANDSINTERNAL::usage
  (*Directories*)
 SetMERLINDirectory::usage
  (*Main Program*)
