@@ -26,7 +26,7 @@ This algorithm is implemented in the Mathematica code MERLIN (Method for Reducti
 
 ## Requirements
 
-* Wolfram Mathematica (version XX or higher recommended)
+* Wolfram Mathematica (tested with version 14.3; version 12 or later recommended)
 
 ---
 
