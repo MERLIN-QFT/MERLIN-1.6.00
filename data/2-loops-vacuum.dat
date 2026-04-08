@@ -1,0 +1,6 @@
+Column[{Style["2-loops Vacuum Bubble", Bold], 
+  Graphics[{Thickness[Large], Arrow[{{-0.5, 0}, {0.5, 0}}], 
+    Arrow[BezierCurve[{{-0.5, 0}, {0, 1}, {0.5, 0}}]], 
+    Arrow[BezierCurve[{{-0.5, 0}, {0, -1}, {0.5, 0}}]], Text["k2", {0, 0.1}], 
+    Text["k1", {0, 0.8}], Text["k3", {0, -0.8}], PointSize[0.02], 
+    Point[{{-0.5, 0}, {0.5, 0}}]}, PlotRange -> 1.5, ImageSize -> 250]}]

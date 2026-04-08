@@ -1,0 +1,10 @@
+Column[{Style["1-loop Triangle", Bold], 
+  "Invariants:\n s1 = p1^2\n s2 = p2^2\n s3 = p3^2", 
+  Graphics[{Thickness[Large], Arrow[{{-2, 0}, {-1, 0}}], 
+    Arrow[{{0, 2}, {0, 1}}], Arrow[{{1.8, -1.2}, {0.8, -0.6}}], 
+    Arrow[{{-1, 0}, {0, 1}}], Arrow[{{0, 1}, {0.8, -0.6}}], 
+    Arrow[{{0.8, -0.6}, {-1, 0}}], Text["p1", {-1.6, 0.2}], 
+    Text["p2", {0.2, 1.6}], Text["p3", {1.6, -0.8}], Text["k2", {-0.6, 0.7}], 
+    Text["k3", {0.5, 0.4}], Text["k1", {-0.2, -0.5}], PointSize[0.02], 
+    Point[{{-1, 0}, {0, 1}, {0.8, -0.6}}]}, PlotRange -> 2, 
+   ImageSize -> 250]}]

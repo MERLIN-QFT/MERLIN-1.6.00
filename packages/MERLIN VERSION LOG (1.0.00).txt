@@ -1,0 +1,283 @@
+MERLIN Version LOG :: Current version: 1.0.00
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+26/03/26 - Version 1.0.00 - MERLIN
+	-Reset the version number from 1.5.01 to 1.0.00
+	-Removed functions:
+		- COMMANDS
+		- COMMDANSINTERNAL
+		- CROSSCHECK
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+26/02/15 - Version 1.5.01 - MERLIN
+	-Fixed:
+		- CachedMaterred, CachedMastersym, and CachedIMPLICITRULE were being cleared prematurely. Now they are cleared when RELOAD is called.
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+26/02/15 - Version 1.5.00 - MERLIN
+	-Changed function:
+		- EVALUATION: Removed FINDELIMITDIRECTION, SYMMETRY, and IMPLICITSYMMETRY
+		- MASSCONFIG: Added INFO [FINDELIMITDIRECTION, SYMMETRY, and IMPLICITSYMMETRY]
+			- Note: The INFO function is now called by MASSCONFIG, and it creates all symmetries and limit directions. These variables are 
+				now defined only once per mass configuration.
+		- LOAD -> INITIALIZE
+			- Note: The LOAD function has been renamed to INITIALIZE; all processes remain the same.
+	- Removed:
+		- All FIRE-related functions.
+			- All FIRE-related functions are in the auxiliary package GRIMOIRE.
+		- BUILDMATRIXESRED: Temporarily removed.
+			- Note: This function is not used in the current version.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+26/01/28 - Version 1.2.00 - MERLIN
+	-Changed function:
+		- SYMMETRYANALISYS: Added support for diagrams with external momenta.
+		- EVALUATION: Temporarily removed the CROSSCHECK function.
+				-Note: The current CROSSCHECK implementation does not support diagrams with external momenta.
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+26/01/12 - Version 1.1.00 - MERLIN
+	-Changed function:
+		- EVALUATE: Now it will test if the mass configuration and diagram are compatible with the loaded matrices
+		- SAVEDIAGRAM: The file name has changed from DIAGRAM{diagram}{massconfig} to MatricesName{diagram}{massconfig}.
+			-Example: 2loops{2,1,1}{u1,4 u1,u1}
+		-DIAGRAM[]: The entry is now treated as a list.
+			-Example: DIAGRAM[{2,1,1},{2,2,2},...]
+	-New function:
+		- MASSCONFIG[]: This function will change the label of the mass configuration to a common labeling.
+				-Example: {a,b,b} -> {u1,u2,u2}
+				-Note: It will create four variables, where two will be the mass configuration and two rules.
+					The rules will change the original mass config and replace their label, and the reversed
+					rule will revert it to their original label.
+		- INFO: This function will write the MASTERRED and IMPLICITYSYM based on the loaded matrices.
+	-Removed:
+		- MASSCONFIG: The variable MASSCONFFIG was removed and replaced by the MASSCONFIG[] function.
+	-Renamed internal variable:
+		- MASSCONFIG -> CachedMassConfig
+	-New Internal Variables:
+		- CachedMassConfig: MASSCONFIG variable with common label {u1,u2,...}
+		- OriginalMassConfig: MASSCONFIG variable with user label {a,b,c,d,...}
+		- CachedMassRule: Rule that relabels the user label into the common label
+		- ReversedMassRule: The reversed rule that relabels the common label into the user label
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+25/12/10 - Version 1.0.15 - MERLIN
+	-Fixed:
+		- External variable: MATRICES transpose error
+			-Solution: Fixed the pair to be transposed - M[1,2,3] -> M[1,3,2]
+		- Name syntax error: filenames that contain any prohibited symbolic character
+			-Solution: Introduced a new internal variable that cleans the filename, it's eliminate any prohibited symbolic character,
+				   e.g, "*","/","+",etc, and some usual mathematical symbols, e.g., "-". The filename will not have any of this symbolic
+				   characters, e.g, 4*u -> 4 u; u + u -> u u, u/4 -> u 4.
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/11/10 - Version 1.0.10 - MERLIN
+	-Removed file dependencies for multiple diagrams
+	-Renamed variables:
+		-DIAGRAM -> DIAGRAMVar
+		-MULTIRESULTS -> RESULTS
+	-Renamed functions:
+		-MULTIDIAGRAM -> DIAGRAM
+		-LOADMULTI[] -> LOADRESULTS
+	-Removed EVALUATE options, now it automatically save and load the results.
+	-New function: 
+		-DIAGRAM[] - It's store the diagrams to be evaluate **
+	** MERLIN automatically identifies single or multiples diagrams. 
+	   Single: DIAGRAM[{vec}]
+	   Multiples: DIAGRAM[{matrix}] -> matrix = {{vec1},{vec2},...}
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/09/10 - Version 1.0.00 - MERLIN
+	-Program renamed: VacDiff -> MERLIN
+	-Renamed variables:
+		-CHOOSEDIAGRAM -> DIAGRAM
+		-DIAGRAM -> DIAGRAMRESULT
+	-Renamed functions:
+		-DIAGRAMRESULT -> DIAGRAMEVALUATION
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/07/28 - Version 2.5.00
+	-Renamed functions:
+		-EVALUATE[] -> EVALUATION[]
+	-New functions:
+		-EVALUATE[], with two options: SAVE and MULTI
+		-MULTIDIAGRAM[]
+		-LOADMULTI[]
+	-Some minor adjustments on functions:
+		-EVALUATION[]
+		-DIAGRAMRESULT
+	-Added new variables:
+		-MULTIRESULTS
+		-VECDIAGRAM
+			Comment: Now the program support multiples diagrams at same time.
+				 The diagram list must be created in folder "to_evaluate".
+				 The file extension is ".m".
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/05/26 - Version 2.2.02
+	-Changed functions:
+		-DIFFSERIESEXPANSION
+			Comment: Further optimization required.
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/05/05 - Version 2.2.01
+	-Changed functions:
+		-DIFFSERIESEXPANSION
+		-CROSSCHECK[]
+		-EVALUATE[]
+			Comment: Further optimization required.
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/04/21 - Version 2.1.02
+	-Fixed minor errors in functions:
+		-SAVEDIAGRAM
+		-EVALUATE[]
+	-Removed functions:
+		-CLEARCAHCE from LOAD[]
+	-Changed functions:
+		-SAVEDIAGRAM
+		-PRINTDIAGRAM
+		-DIAGRAMRESULT
+	-Environment change:
+		-EVALUATE[]
+			Comment: Always clear the cached values after the first execution. 
+			Comment²: Always test if the result already exist in the results folder. If the result already exist, the LOADDIAGRAM
+				function will be called and the diagram will be stored in the variable DIAGRAM.
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/04/09 - Version 2.1.00 (WIP)
+   	-Added function:
+		-SAVEINCIDENTSMATRIX
+    		-EVALUATE[]
+	-New structure:
+		-EVALUATE[]
+			Comment: This function executes all functions required to obtain the result. Option: [Save] (True or False).
+	-Changed functions:
+		-LOAD[]
+			Comment: Added the load for the INCIDENTSMATRIX variable save by function SAVEINCIDENTSMATRIX.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/04/03 - Version 2.0.00 
+	-Changed global structure.
+	-Added function:
+		-LOAD[]
+		-RELOAD
+		-SetVacDiffDirectory[]
+		-COMMANDSFIRE
+		-COMMANDSINTERNAL
+	-Changed structure of function:
+		-BUILDMATRICES[] -> BUILDMATRICES[][]
+			Comment: Now this function build the master integrals and matrices with the FIRE files and save them into files
+				to be loaded with LOAD[]. With LOAD[] command, the program FIRE is not required to evaluate the diagrams,
+				only to build the initial data of the loop integrals.
+				Both 2-loops and 3-loops do not require this function anymore, unless the initial data is wiped.
+		-COMMANDS
+	-Replaced function:
+		-SetDirectories[] -> SetFIREFilesDirectories[]
+		-ResetDirectories -> ResetFIREFilesDirectories
+		-CurrentDirectories -> CurrentFIREFileDirectories
+	-Implemented function:
+		-SAVEDIAGRAM
+		-RETRIVEDIAGRAM[][]
+	-New folder structure for the package usage was defined.
+		Comment: Now the initial data are in the folders "master-integrals" and "matrices", and the diagram results are in the 
+			folder "results".
+			The FIRE relate data are inside the folder "FIRE-files", inside this folder, the path to start and tables files 
+			remains the same.
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/04/0? - Version 1.4.00 (WIP)
+    	-Added function:
+        	-SAVEDIAGRAM
+        	-RETRIVEDIAGRAM
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+25/04/02 - Version 1.3.02
+    	-Fixed error in functions:
+		-SOLVE
+        	-MATRIXRED
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/04/01 - Version 1.3.00
+	-Added function:
+		-FINDVELOCITYVECTOR
+		-MATRIXRED
+	-Changed function:
+		-SOLVE
+			Change: Replace the implicit symmetry search to use the MATRICES instead DIFFCOEFFICIENTS.
+				Now, its find all the rules for the MASSCONFIG and SYMMETRY.
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/03/18 - Version 1.1.13
+	-Added function:
+		-SIMPLIFY
+	-Changed function:
+		-PRINTDIAGRAM
+			Change: Now only print the result.
+		-DIFFSERIESEXPANSION
+			Change: Added SIMPLIFY to prepare the series expansion.
+		-DIAGRAMRESULT
+			Change: Now also call function SOLVE and apply the IMPLICITRULE.
+Comment: The SIMPLIFY function optimized DIFFSERIESEXPANSION processing time by 60% for the tested diagram*. (Further test needed)
+	 *Tested for the diagram {2,2,2,2,1,1} with mass configuration {u,v,v,v,v,v}, DIFFSERIESEXPANSION comparison for the versions: 
+		Version 1.1.12 elapse time ~153 seconds;**
+		Version 1.1.13 elapse time ~59 seconds.**
+			**Preparation time + Expansion time
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/03/12 - Version 1.1.12
+	-Added function:
+		-CLEARCACHE
+	-Changed structure of functions:
+		-SOLVE
+		-PRINTDIAGRAM
+		-DIAGRAMRESULT
+		-DIFFSERIESEXPANSION
+	-Fixed minor errors in functions:
+		-SOLVE
+		-PRINTDIAGRAM
+	-Fixed the variables used in the functions:
+		-PREPAREDIFFERENTIAL
+		-DIAGRAMRESULT
+		-DIFFSERIESEXPANSION
+		-SERIESEXPANSION
+		-SOLVE
+		-PRINTDIAGRAM
+	-Minor optimization of functions:
+		-BUILDMATRICES[]
+		-DIFFSERIESEXPANSION
+	-Errors found: Final result being contaminated with previous results, if Quit[] not used.
+		-DIAGRAMRESULT
+		-PREPAREDIFFERENTIAL
+		-SOLVE
+	-Fix for the error: Function CLEARCACHE created and implemented in BUILDMATRICES[].
+			    Now always clear previous cached results before evaluate new ones, 
+			    if BUILDMATRICES[] is always called.
+			    To prevent this errors, always call CLEARCACHE at the end of the 
+			    program, before re-run any function, except BUILDMATRICES[].
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/03/11 - Version 1.1.08
+	-Added functions:
+		-SOLVE
+		-PRINTDIAGRAM
+		-DIAGRAMRESULT
+		-DIFFSERIESEXPANSION	
+		-TIMING[]	
+	-Fixed some minor errors in functions:
+		-PREPAREDIFFERENTIAL
+		-SERIESEXPANSION[]
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/03/10 - Version 1.1.00
+	-Changed the structure of functions:
+		-Symmetry[] -> SYMMETRY
+		-SymmetryAnalysis -> SYMMETRYANALYSIS
+		-BuildMatrices[] -> BUILDMATRICES[]
+	-Added global internal variables:
+		-MASSCONFIG
+		-INCIDENTMATRIX
+		-CHOOSEDIAGRAM
+	-Added functions
+		-PREPAREDIFFERENTIAL
+		-SERIESEXPANSION[]
+	-Added global external variables.
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+25/03/?? - Version 1.0.00 (WIP)
+	-Changed all internal and external variables.
+	-Changed the structure of the package.
+	-Added new environment for the evaluation.
+	-Excluded unused internal and external variables.
+	-Excluded the functions:
+		-DIFF[]
+		-DIFF2[]
+		-DiagramAnalysis[]
+		-PrintDiagram[]
+		-ReplaceMass[]
+		-Limit[]
+		-DiagramDEBUG[]
+		-MatricesSeries[]
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+25/??/?? - Version 0.X.XX
