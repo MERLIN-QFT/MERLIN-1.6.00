@@ -96,7 +96,7 @@ The current version includes precomputed data for the following diagram families
 
 These identifiers correspond to the arguments used in `INITIALIZE[...]`.
 
-The data encode the necessary structures for the reduction procedure and can be extended by constructing additional topologies.
+The data encode the necessary structures for the reduction procedure and can be extended by constructing additional topologies. (To be implemented)
 
 Although some of these data were generated using external reduction tools, the construction is method-independent and can, in principle, be reproduced using other frameworks.
 
