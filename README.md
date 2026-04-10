@@ -17,7 +17,6 @@ This algorithm is implemented in the Mathematica code MERLIN (Method for Reducti
 ## Features
 
 * Reduction of Feynman integrals to master integrals via covariant differentiation
-* Construction of reusable connections for each topology
 * Applicability to arbitrary internal mass configurations
 * Pre-built data for selected diagram families
 * Symbolic implementation in Wolfram Mathematica
