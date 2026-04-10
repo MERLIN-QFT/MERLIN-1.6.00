@@ -8,7 +8,7 @@ MERLIN is a Mathematica-based program for the reduction of loop integrals in qua
 
 ## Abstract
 
-We show how a large class of Feynman integrals can be efficiently reduced to master integrals by suitable covariant differentiation of the latter. The connections required for the covariant derivatives are constructed only once for a given topology and can then be applied to any configuration of internal propagator masses.
+We show how a large class of Feynman integrals can be efficiently reduced to master integrals by suitable covariant differentiation on the vector space dual to the one spanned by the master integrals. The connections needed in the covariant derivatives have to be built only once for a given topology and then apply to any configuration of internal propagator masses.
 
 This algorithm is implemented in the Mathematica code MERLIN (Method for Reduction of Loop Integrals).
 
