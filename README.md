@@ -122,7 +122,7 @@ See the `LICENSE` file for details.
 
 If you use MERLIN in your research, please cite the associated publication:
 
-> (Add reference here)
+> [Feynman integral reduction by covariant differentiation](https://arxiv.org/abs/2604.09810)
 
 ---
 
