@@ -1,6 +1,7 @@
 (* ::Package:: *)
 
 BeginPackage["MERLIN`"];
+
  (*Directories*)
 SetMERLINDirectory::usage
  (*Main Program*)
@@ -19,7 +20,6 @@ SYMMETRYANALYSIS::usage = "Symmetry[incidence, masses, nu1, nu2] checks if two i
 SYMMETRY::usage = "Symmetry[incidence,massconfig] return the new Master list with symmetries applied.";
 FINDREDUCEDPOSITION::usage = "Internal usage only! Set the master integral basis of the chosen diagram.";
 CLEARCACHE::usage
-SIMPLIFY::usage = "Parallel simplify for any vector expression"
 SAVEDIAGRAM::usage
 LOADDIAGRAM::usage
 RELOAD::usage
@@ -29,6 +29,8 @@ DIAGRAM::usage
 LOADRESULTS::usage
 INFO::usage
 MAKERULES::usage
+SIMPLIFY::usage
+STARTPARALLEL::usage
  (*Total Time function*)
 TIMING::usage
 
@@ -62,7 +64,7 @@ If[!ValueQ[MERLINDirectory], MERLINDirectory = NotebookDirectory[]];
 
 Begin["`Private`"];
 
-VERSION = Style["1.0.00",Bold];
+VERSION = Style["1.6.00",Bold];
 Print["MERLIN, ver. ",VERSION," loaded successfully."];
 
 (*Directories*)
@@ -80,6 +82,7 @@ Print["MERLIN, ver. ",VERSION," loaded successfully."];
 	(*Auxiliary cache values*)
 		If[!ValueQ[loaded], loaded = False];
 INITIALIZE[filename_]:=Module[{filenamemaster,filenamemasterlist,filenamematrix,Master0,Master,MatricesA,mass,filenameim,temp,filedata,data},
+	MERLIN`STARTPARALLEL;
 	If[!loaded,
 		Print["Loading initial data..."];
 		SetDirectory[MERLINDirectory];
@@ -202,29 +205,56 @@ SYMMETRY:= Module[{equivalences,Mastersym,Masterred},
 	(*Auxiliary cache values*)
 		If[!ValueQ[CachedCoefficientsDIFF], CachedCoefficientsDIFF = {}];
 (*Main function*)
-PREPAREDIFFERENTIAL:=Module[{e,DN,index,Eqn,result},
+
+PREPAREDIFFERENTIAL:=Module[{e, DN, index, Eqn, result,M, TempMass, tempIndex, TempMatricesA,currentDerivative, totalDerivativeIndex,currentIndex, vecNumber, vecTotal},
    
 	If[CachedMatricesA === {}, Print["Matrices not found. Execute LOAD[]."];Abort[]];
 	If[DIAGRAMVar === {}, Print["Diagram to be evaluated not found. Define DIAGRAM."];Abort[]];
 	
 	e[n_]=UnitVector[Length[CachedMaster0],n];
 	MERLIN`FINDREDUCEDPOSITION[CachedMaster0,DIAGRAMVar];
-   
-	DN[i_,x_,n_]:=(-1)^n/n! Nest[D[#,CachedMassU[[i]]]-CachedMatricesA[[i]] . #&,x,n];
 	index[y_]:=If[#-1<0,0,#-1]&/@y;
-	Eqn[q_]:=Module[{expr},expr=e[masterpos];
-					Do[If[q[[i]]=!=0,Print["Start ", q[[i]]," derivative of index ",i,"..."];
-					expr=DN[i,expr,q[[i]]]],{i,1,Length[CachedMaster0[[1]]]}];
-					expr
-			];
-		Print["Preparing the evaluation of diagram: I [",DIAGRAMVar,"]..."];
-	result=AbsoluteTiming[Eqn[index[DIAGRAMVar]]];
+	tempIndex = index[DIAGRAMVar];
+	M = Table[Symbol["m" <> ToString[i]], {i, Length[CachedMassConfig]}];
+	Do[If [tempIndex[[i]]>= 1, M[[i]]=M[[i]],M[[i]]=0], {i,1,Length[M]}];
+
+	TempMatricesA[i_,M_] := Module[{rule,matricesB},
+	rule = Thread[CachedMassU -> CachedMassConfig+Global`t*LIMITDIRECTION + M];
+	matricesB = CachedMatricesA[[i]] /.rule;
+	matricesB
+	];
+
+	DN[i_, x_, n_] := With[{var = M[[i]], mat = TempMatricesA[i, M]},
+		Module[{r = x, new, k, j, l},
+			vecTotal = Length[x];
+			For[k = 1, k <= n, k++,
+				currentIndex = i;
+				currentDerivative = k;
+				totalDerivativeIndex = n;
+				new = Table[0, {vecTotal}];
+				For[j = 1, j <= vecTotal, j++,
+					If[Mod[Floor[100*j/vecTotal],10] == 0 ||j == vecTotal,vecNumber = Floor[100*j/vecTotal];];
+					new[[j]] = D[r[[j]], var] - Sum[mat[[j,l]]*r[[l]], {l,1,vecTotal}];];
+			r = new;];(-1)^n/n! r]];
+	Eqn[q_] := Module[{expr},
+		expr = e[masterpos];
+			currentDerivative = 0;
+			totalDerivativeIndex = 0;
+			currentIndex = 0;
+			vecNumber = 0;
+			vecTotal = Length[CachedMaster0];
+		Monitor[Do[If[q[[i]] =!= 0,expr = DN[i, expr, q[[i]]] /. M[[i]] -> 0;M = M /. M[[i]] -> 0;],{i, 1, Length[CachedMaster0[[1]]]}],
+			Column[{Row[{currentDerivative, "/", totalDerivativeIndex," Derivative of index ", currentIndex}],ProgressIndicator[vecNumber,{0,100}],Row[{vecNumber,"%"}]}]];
+		expr];
+		Print["Starting the derivatives for diagram: I [",DIAGRAMVar,"]..."];
+	result=AbsoluteTiming[Eqn[tempIndex]];
 	If[Length[result[[2]]] =!= Length[CachedMaster],Print[Style["ERROR: Coefficients have been incorrectly built.",Red]];Abort[],
 		Print["Derivatives completed, time: ",result[[1]]," seconds."]];
 	CachedCoefficientsDIFF = result[[2]];
 	MERLIN`TIMING[1,result[[1]]][False];
 	DIFFCOEFFICIENTS = CachedCoefficientsDIFF;
 ];
+
 	(*Auxiliary cache values*)
 		If[!ValueQ[masterpos], masterpos = {}];
 (*Auxiliary function for Differential function*)
@@ -236,45 +266,79 @@ FINDREDUCEDPOSITION[list_,b_]:=Module[{pos,reduceVector},
 		If[!ValueQ[CachedMATRIXEXPANSION], CachedMATRIXEXPANSION = {}];
 		If[!ValueQ[CachedINTEXPANSION], CachedINTEXPANSION = {}];
 (*Series expansion*)
-SERIESEXPANSION[k_]:=Module[{An1,AS,J,n,time1,time2,time3},
-	If[CachedMatricesA === {}, Print["Matrices not found. Execute LOAD[]."];Abort[]];
-	If[LIMITDIRECTION === {}, Print["Velocity vector not found. Execute FINDLIMITDIRECTION."];Abort[]];
-	If[CachedMassConfig === {}, Print["Mass configuration not found. Define MASSCONFIG."];Abort[]];
-		Print["Start Matrices and Master Integral series expansion, up to leading order: ", k,"..."];
-	J=Table[0,k+1];
-	AS = Table[0,k+1];
-	CachedMATRIXEXPANSION = ConstantArray[0, k+2];
-	time1 = AbsoluteTiming[An1 = SeriesCoefficient[Transpose[LIMITDIRECTION . CachedMatricesA]/.Thread[CachedMassU->(CachedMassConfig+Global`t*LIMITDIRECTION)],{Global`t,0,-1}]];
-	time2 = AbsoluteTiming[Do[AS[[n]]=SeriesCoefficient[Transpose[LIMITDIRECTION . CachedMatricesA]/.Thread[CachedMassU->(CachedMassConfig+Global`t*LIMITDIRECTION)],{Global`t,0,n-1}],{n,1,k+1}]];
-		J[[1]] = CachedMaster;
-	time3 = AbsoluteTiming[Do[J[[n]] = -Inverse[(n-1)*IdentityMatrix[Length[CachedMaster]]+An1] . Sum[AS[[i]] . J[[n-i]],{i,1,n-1}],{n,2,k+1}]];
-		Print["Series expansion complete, time: ", time1[[1]]+time2[[1]]+time3[[1]] ," seconds."];
-	CachedINTEXPANSION = J;
-	INTEXPANSION = CachedINTEXPANSION;
-	Do[If[i === 1,CachedMATRIXEXPANSION[[i]]=An1,CachedMATRIXEXPANSION[[i]]=AS[[i-1]]],{i,1,k+2}];
-	MATRIXEXPANSION = CachedMATRIXEXPANSION;
-	MERLIN`TIMING[3,time1[[1]]+time2[[1]]+time3[[1]]][False]
+
+SERIESEXPANSION[k_] := Module[{An1, AS, J, n, time1, time2, time3, progress, stage},
+
+  If[CachedMatricesA === {}, Print["Matrices not found. Execute LOAD[]."]; Abort[]];
+  If[LIMITDIRECTION === {}, Print["Velocity vector not found. Execute FINDLIMITDIRECTION."]; Abort[]];
+  If[CachedMassConfig === {}, Print["Mass configuration not found. Define MASSCONFIG."]; Abort[]];
+
+  Print["Starting Matrices and Master Integral series expansion, up to leading order: ", k, "..."];
+  progress = 0;
+  stage = "Starting";
+  Monitor[
+    J = Table[0, k + 1];
+    AS = Table[0, k + 1];
+    CachedMATRIXEXPANSION = ConstantArray[0, k + 2];
+    stage = "Computing A[-1]";
+    progress = 0;
+    time1 = AbsoluteTiming[
+      An1 =
+        SeriesCoefficient[
+          Transpose[LIMITDIRECTION . CachedMatricesA] /.
+            Thread[CachedMassU -> (CachedMassConfig + Global`t*LIMITDIRECTION)],
+          {Global`t, 0, -1}
+        ];
+      progress = 10;
+    ];
+    stage = "Expanding matrices";
+    time2 = AbsoluteTiming[Do[AS[[n]] =SeriesCoefficient[Transpose[LIMITDIRECTION . CachedMatricesA] /.Thread[CachedMassU -> (CachedMassConfig + Global`t*LIMITDIRECTION)],{Global`t, 0, n - 1}];
+		If[Mod[Floor[100*n/(k + 1)], 10] == 0 || n == k + 1,progress = Floor[100*n/(k + 1)];],{n, 1, k + 1}]];
+    J[[1]] = CachedMaster;
+    stage = "Expanding master integrals";
+    progress = 0;
+    time3 = AbsoluteTiming[Do[J[[n]] =-Inverse[(n - 1)*IdentityMatrix[Length[CachedMaster]] + An1] . Sum[AS[[i]] . J[[n - i]], {i, 1, n - 1}];
+    If[Mod[Floor[100*(n - 1)/k], 10] == 0 || n == k + 1,progress = Floor[100*(n - 1)/k];],{n, 2, k + 1}]];
+    Print["Series expansion complete, time: ",time1[[1]] + time2[[1]] + time3[[1]]," seconds."];
+    CachedINTEXPANSION = J;
+    INTEXPANSION = CachedINTEXPANSION;
+    stage = "Saving matrix expansion";
+    progress = 0;
+    Do[If[i === 1,
+       CachedMATRIXEXPANSION[[i]] = An1,
+       CachedMATRIXEXPANSION[[i]] = AS[[i - 1]]
+      ];
+      If[Mod[Floor[100*i/(k + 2)], 10] == 0 || i == k + 2,progress = Floor[100*i/(k + 2)];],{i, 1, k + 2}];
+    MATRIXEXPANSION = CachedMATRIXEXPANSION;
+    MERLIN`TIMING[3, time1[[1]] + time2[[1]] + time3[[1]]][False],
+		Column[{Row[{stage, ": ", progress, "%"}],ProgressIndicator[progress, {0, 100}]}]]
 ];
 	(*Auxiliary cache values*)
 		If[!ValueQ[CachedDIFFEXPANSION], CachedDIFFEXPANSION = {}];
-DIFFSERIESEXPANSION:= Module[{temp,temp2,res,time,rule,maxlength},
+DIFFSERIESEXPANSION:= Module[{temp1,temp2,res,time,rule,maxlength,coeffs,needSimplify,count,total,progress},
 	If[CachedMatricesA === {}, Print["Matrices not found. Execute LOAD[]."];Abort[]];
 	If[CachedCoefficientsDIFF === {}, Print["Differential Coefficients not found. Execute PREPAREDIFFERENTIAL."];Abort[]];
 	If[LIMITDIRECTION === {}, Print["Velocity vector not found. Execute FINDLIMITDIRECTION."];Abort[]];
 	If[CachedMassConfig === {}, Print["Mass configuration not found. Define MASSCONFIG."];Abort[]];
-		Print["Preparing series expansion for the diagram: I[",DIAGRAMVar,"], with mass configuration: ",OriginalMassConfig,"..."];
-	rule = Thread[CachedMassU->(CachedMassConfig+Global`t*LIMITDIRECTION)];
-	temp = AbsoluteTiming[MERLIN`SIMPLIFY[CachedCoefficientsDIFF/.rule]];
-		Print["Preparations completed, time: ",temp[[1]]," seconds."];
-		Print["Start series expansion..."];
-	temp2 = AbsoluteTiming[Map[CoefficientList[Normal[Series[#,{Global`t,0,0}]],1/Global`t]&,temp[[2]]]];
-	maxlength = Max[Map[Length[#]&,temp2[[2]]]];	
-	time = AbsoluteTiming[Transpose[Map[PadRight[#,maxlength]&,temp2[[2]]]]];
+	Print["Preparing the diagram I[",DIAGRAMVar,"] for series expansion"];
+	needSimplify = Length[DeleteDuplicates[CachedMassConfig]] > 1;
+	temp1 = AbsoluteTiming[coeffs = If[needSimplify,MERLIN`SIMPLIFY[CachedCoefficientsDIFF],CachedCoefficientsDIFF]];
+	Print["Preparation complete, time: ",temp1[[1]]," seconds."];
+	Print["Starting series expansion for the diagram: I[",DIAGRAMVar,"], with mass configuration: ",OriginalMassConfig,"..."];
+	count = 0;
+	progress = 0;
+	total = Length[coeffs];
+	temp2 = AbsoluteTiming[Monitor[Map[(count++;
+        If[Mod[Floor[100*count/total],10] == 0 ||count == total,progress = Floor[100*count/total];];
+        CoefficientList[Normal[Series[#, {Global`t,0,0}]],1/Global`t]) &,coeffs],
+        Column[{Row[{"Expanding: ", progress, "%"}],ProgressIndicator[progress,{0,100}]}]]];
+	maxlength = Max[Map[Length[#] &, temp2[[2]]]];
+	time = AbsoluteTiming[Transpose[    Map[PadRight[#, maxlength] &, temp2[[2]]]]];
 	CachedDIFFEXPANSION = time[[2]];
 		Print["Leading order: ",-(Length[CachedDIFFEXPANSION]-1),"."];
 	DIFFEXPANSION = CachedDIFFEXPANSION;
-		Print["Series expansion complete, time: ",time[[1]]," seconds."];
-	MERLIN`TIMING[2,time[[1]]=temp2[[1]]+temp[[1]]][False];
+		Print["Series expansion complete, time: ",time[[1]]+temp2[[1]]," seconds."];
+	MERLIN`TIMING[2,time[[1]]+temp1[[1]]+temp2[[1]]][False];
 ];
 
 (*Auxiliary function Total Time*)
@@ -338,7 +402,6 @@ CLEARCACHE:= (
 	CachedMatricesB = {};
 	TIME = Table[0,10];
 );
-SIMPLIFY[expr_List] := ParallelMap[Simplify, expr];
 
 (*Find LIMITDIRECTION*)
 FINDLIMITDIRECTION := Module[{n, TESTVECTOR, t, indeterminateFound, positions, 
@@ -396,7 +459,7 @@ SAVEDIAGRAM:=Module[{diagramStr,massConfigStr,filename,diagram,temp,tempname,san
 		If[CachedDIAGRAM==={},"No result found. Aborting save function.";Abort[]];
 		Print["Preparing the result to be saved..."];
 		temp = AbsoluteTiming[Expand[Flatten[CachedDIAGRAM]]];
-		diagram = AbsoluteTiming[Collect[Simplify[temp[[2]]],CachedMasterred]];
+		diagram = AbsoluteTiming[Collect[temp[[2]],CachedMasterred]];
 		Print["Complete, time: ",diagram[[1]]+temp[[1]]," seconds."];
 		Print["Saving Diagram result..."];
 		Put[diagram[[2]],filename];
@@ -437,7 +500,6 @@ EVALUATION[save_:False] := Module[{diagramStr,massConfigStr,filename,temp,saniti
 		Print[Style[Row[{  "Starting the evaluation of the diagram: I[", DIAGRAMVar, "], with mass configuration: ", OriginalMassConfig, "..."}], Bold]];
 		MERLIN`PREPAREDIFFERENTIAL;
 		MERLIN`DIAGRAMEVALUATION;
-		(*MERLIN`CROSSCHECK[DIAGRAMRESULT];*)
 		If[save===True, MERLIN`SAVEDIAGRAM];
 		LOADFUNC = False,
 		Print["The result for the diagram: I[",DIAGRAMVar,"], with mass configuration: ",OriginalMassConfig," already exists."];
@@ -493,6 +555,17 @@ MAKERULES[lhs_List, rhs_List] := Module[{bases, rhsTrim},
 	Thread[bases -> rhsTrim]
 ];
 
+SIMPLIFY[expr_List] := ParallelMap[
+	Function[z,
+		If[z === 0 || LeafCount[z] < 5000, z, Cancel[Together[z]]]], 
+		expr,
+		Method -> "CoarsestGrained"
+	];
+STARTPARALLEL := Module[{},
+	If[$KernelCount == 0, LaunchKernels[]];Print["Parallel kernels active: ", $KernelCount];
+	DistributeDefinitions[MERLIN`SIMPLIFY];
+	ParallelEvaluate[$HistoryLength = 0];
+];
 
 
 End[];
