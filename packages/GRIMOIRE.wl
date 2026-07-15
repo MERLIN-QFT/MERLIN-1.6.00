@@ -49,7 +49,7 @@ If[!ValueQ[GRIMOIREDirectory], GRIMOIREDirectory = NotebookDirectory[]];
 
 Begin["`Private`"];
 
-VERSION = Style["0.0.01",Bold];
+VERSION = Style["0.0.00",Bold];
 Print["GRIMOIRE, ver. ",VERSION," loaded successfully."];
 Print["Use ",Style["COMMANDS",Bold], ", for GRIMOIRE commands."];
 Print["---------------------------------------------"];
