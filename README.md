@@ -65,10 +65,10 @@ MERLIN/
 └── MERLIN_TEMPLATE.nb
 ```
 
-* `packages/` contains the core `.wl` implementation
-* `data/`, `matrices/`, and `master-integrals/` store precomputed inputs
-* `results/` is used for generated outputs
-* The notebook must be executed from this root location to ensure correct path resolution
+* `packages/` contains both the **MERLIN** and **GRIMOIRE** Mathematica packages.
+* `FIRE-files/` stores the FIRE 6.5.2 project files used by GRIMOIRE.
+* `data/`, `matrices/`, and `master-integrals/` contain the generated input required by MERLIN.
+* `results/` stores the generated outputs.
 
 ---
 
