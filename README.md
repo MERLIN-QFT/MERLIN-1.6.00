@@ -20,6 +20,18 @@ This algorithm is implemented in the Mathematica code MERLIN (Method for Reducti
 * Applicability to arbitrary internal mass configurations
 * Pre-built data for selected diagram families
 * Symbolic implementation in Wolfram Mathematica
+  
+## GRIMOIRE
+
+MERLIN includes **GRIMOIRE**, a companion Mathematica package that interfaces with **FIRE 6.5.2** to construct the initial data required by MERLIN.
+
+GRIMOIRE automatically generates:
+
+- Connection matrices
+- Lists of master integrals
+- Incidence matrices
+
+These files provide the necessary input for MERLIN and allow users to construct new topologies beyond those distributed with the package. A template notebook (`GRIMOIRE_TEMPLATE.nb`) is included to demonstrate the complete workflow.
 
 ---
 
@@ -37,11 +49,19 @@ Typical structure:
 
 ```id="e8kq0r"
 MERLIN/
+├── FIRE-files/
+│   ├── config/
+│   ├── list-master/
+│   ├── start/
+│   └── tables/
 ├── data/
 ├── master-integrals/
 ├── matrices/
 ├── packages/
+│   ├── MERLIN.wl
+│   └── GRIMOIRE.wl
 ├── results/
+├── GRIMOIRE_TEMPLATE.nb
 └── MERLIN_TEMPLATE.nb
 ```
 
